@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from typing import Any, Callable, Dict, Generator
 
 from pika import BlockingConnection, ConnectionParameters, PlainCredentials, SSLOptions
-from pricera.common import get_rabbitmq_host, get_rabbitmq_password, get_rabbitmq_user
+from pricera.common.utilities import get_rabbitmq_host, get_rabbitmq_password, get_rabbitmq_user
 from pricera.common.collectors.exceptions import MessageFileFormatError, MessageFileNotFoundError
 
 
