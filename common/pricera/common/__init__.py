@@ -3,9 +3,6 @@ __all__ = [
     "FileBasedMessageConsumer",
     "BaseCollector",
     "load_file_from_sub_folder",
-    "get_rabbitmq_host",
-    "get_rabbitmq_user",
-    "get_rabbitmq_password",
 ]
 
 import argparse
@@ -15,7 +12,6 @@ from typing import Callable
 from .collectors import BaseCollector, FileBasedMessageConsumer, RabbitMQ
 from .etl_pipeline import etl_pipeline
 from .testing_utilities import load_file_from_sub_folder
-from .utilities import get_rabbitmq_host, get_rabbitmq_password, get_rabbitmq_user
 
 
 def get_file_args() -> argparse.Namespace:
