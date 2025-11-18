@@ -7,7 +7,7 @@ __all__ = [
 
 import argparse
 from dataclasses import dataclass
-from typing import Callable
+from typing import Callable, Any
 
 from .collectors import BaseCollector, FileBasedMessageConsumer, RabbitMQ
 from .etl_pipeline import etl_pipeline
@@ -23,20 +23,18 @@ def get_file_args() -> argparse.Namespace:
 
 @dataclass
 class MessageProcessor:
-    collector_cls: type[BaseCollector]
-    pipeline: Callable
-    queue: str
+    pipeline: Callable  # crawler_pipeline
+    factory: Any
 
     def process(self, message: dict) -> None:
-        self.pipeline(collector_cls=self.collector_cls, message=message, queue=self.queue)
+        self.pipeline(message=message, crawler_factory=self.factory)
 
 
 def launch_collector(
-    collector_cls: type[BaseCollector],
     queue: str,
     pipeline: Callable = etl_pipeline,
 ):
-    message_processor = MessageProcessor(collector_cls=collector_cls, pipeline=pipeline, queue=queue)
+    message_processor = MessageProcessor(pipeline=pipeline, factory=None)
     args = get_file_args()
     if args.file:
         file_consumer: FileBasedMessageConsumer = FileBasedMessageConsumer(
