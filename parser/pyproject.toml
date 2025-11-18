@@ -1,0 +1,15 @@
+[tool.poetry]
+name = "pricera.parser"
+version = "0.1.0"
+description = ""
+authors = []
+packages=[
+    {include="pricera/parser/*"}
+]
+
+[tool.poetry.dependencies]
+python = ">=3.13"
+
+[build-system]
+requires = ["poetry>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
