@@ -13,7 +13,7 @@ class RozetkaProductCrawler(BaseCollector):
         from pricera.crawler.rozetka.spiders.product_spider import RozetkaProductSpider
 
         return self.process_scrapy_spider(
-            RozetkaProductSpider, s3_bucket=self.bucket, s3_prefix=self.path, urls=self.urls, proxy_config=None
+            RozetkaProductSpider, s3_bucket=self.bucket, s3_prefix=self.path, start_urls=self.urls, proxy_config=None
         )
 
     @classmethod
