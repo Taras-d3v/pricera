@@ -26,6 +26,9 @@ class RozetkaProductSpider(BaseSpider):
             "sec-fetch-site": "same-site",
             "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
         },
+        "ITEM_PIPELINES": {
+            "common.pricera.common.crawler.middleware.item_pipeline.S3Pipeline": 300,
+        },
     }
 
     def __init__(self, start_urls: list[str], *args, **kwargs):
