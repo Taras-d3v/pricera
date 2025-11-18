@@ -2,6 +2,7 @@
 import io
 import json
 import logging
+import os
 from collections import defaultdict
 from datetime import datetime
 
@@ -16,45 +17,41 @@ class S3ChainUploadPipeline:
     uploads each chain to a separate file in S3 in JSON Lines format.
     Each item is expected to contain the `chain_uuid` field.
     Scrapy settings expected:
-      - AWS_ACCESS_KEY_ID
-      - AWS_SECRET_ACCESS_KEY
-      - AWS_REGION
       - S3_BUCKET_NAME
-      - S3_PREFIX (optional, default is 'chains/')
+      - S3_PREFIX
     """
 
-    def __init__(
-        self,
-        aws_access_key_id,
-        aws_secret_access_key,
-        region_name,
-        bucket_name,
-        prefix="chains/",
-    ):
+    def __init__(self, bucket_name, prefix="chains/"):
         self.logger = logging.getLogger(self.__class__.__name__)
         self.s3 = boto3.client(
             "s3",
-            aws_access_key_id=aws_access_key_id,
-            aws_secret_access_key=aws_secret_access_key,
-            region_name=region_name,
+            aws_access_key_id=self.aws_secret_access_key,
+            aws_secret_access_key=self.aws_access_key_id,
+            region_name=self.aws_region,
         )
         self.bucket = bucket_name
         self.prefix = prefix or ""
         self.responses = defaultdict(list)
 
+    @property
+    def aws_access_key_id(self):
+        return os.environ.get("AWS_ACCESS_KEY_ID")
+
+    @property
+    def aws_secret_access_key(self):
+        return os.environ.get("AWS_SECRET_ACCESS_KEY")
+
+    @property
+    def aws_region(self):
+        return os.environ.get("AWS_REGION")
+
     @classmethod
     def from_crawler(cls, crawler):
         settings = crawler.settings
-        aws_access_key_id = settings.get("AWS_ACCESS_KEY_ID")
-        aws_secret_access_key = settings.get("AWS_SECRET_ACCESS_KEY")
-        region_name = settings.get("AWS_REGION")
         bucket_name = settings.get("S3_BUCKET_NAME")
-        prefix = settings.get("S3_PREFIX", "chains/")
+        prefix = settings.get("S3_PREFIX")
 
         pipeline = cls(
-            aws_access_key_id=aws_access_key_id,
-            aws_secret_access_key=aws_secret_access_key,
-            region_name=region_name,
             bucket_name=bucket_name,
             prefix=prefix,
         )
