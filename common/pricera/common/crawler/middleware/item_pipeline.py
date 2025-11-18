@@ -4,7 +4,6 @@ import json
 import logging
 import os
 from collections import defaultdict
-from datetime import datetime
 
 import boto3
 from scrapy import signals
@@ -21,7 +20,7 @@ class S3Pipeline:
       - S3_PREFIX
     """
 
-    def __init__(self, bucket_name, prefix="chains/"):
+    def __init__(self, bucket_name: str, prefix: str):
         self.logger = logging.getLogger(self.__class__.__name__)
         self.s3 = boto3.client(
             "s3",
@@ -29,9 +28,9 @@ class S3Pipeline:
             aws_secret_access_key=self.aws_access_key_id,
             region_name=self.aws_region,
         )
-        self.bucket = bucket_name
-        self.prefix = prefix or ""
-        self.responses = defaultdict(list)
+        self.bucket: str = bucket_name
+        self.prefix: str = prefix
+        self.responses: defaultdict = defaultdict(list)
 
     @property
     def aws_access_key_id(self):
@@ -60,9 +59,9 @@ class S3Pipeline:
         return pipeline
 
     def process_item(self, item, spider):
-        chain_uuid = item.get("chain_uuid")
-        if not chain_uuid:
-            # If there's no chain_uuid — log and drop the item; modify behaviour if needed
+        object_key = item.get("object_key")
+        if not object_key:
+            # If there's no object_key — log and drop the item; modify behaviour if needed
             raise DropItem("Missing chain_uuid in item")
 
         # Convert the item to a serializable structure (usually a dict)
@@ -72,7 +71,7 @@ class S3Pipeline:
             # As a fallback — convert values to strings
             serializable = {k: str(v) for k, v in item.items()}
 
-        self.responses[chain_uuid].append(serializable)
+        self.responses[object_key].append(serializable)
         return item
 
     def spider_closed(self, spider, reason):
@@ -83,10 +82,8 @@ class S3Pipeline:
             self.logger.debug("No responses collected, skipping S3 upload.")
             return
 
-        for chain_uuid, items in self.responses.items():
-            timestamp = datetime.utcnow().strftime("%Y%m%dT%H%M%SZ")
-            safe_uuid = chain_uuid or f"no-chain-{timestamp}"
-            key = f"{self.prefix.rstrip('/')}/{safe_uuid}.jsonl"
+        for object_key, items in self.responses.items():
+            key = f"{self.prefix.rstrip('/')}/{object_key}"
 
             bio = io.BytesIO()
             for it in items:
@@ -98,9 +95,9 @@ class S3Pipeline:
             try:
                 # Upload the object to S3
                 self.s3.upload_fileobj(bio, self.bucket, key)
-                self.logger.info("Uploaded chain %s to s3://%s/%s", safe_uuid, self.bucket, key)
+                self.logger.info("Uploaded chain %s to s3://%s/%s", object_key, self.bucket, key)
             except Exception as e:
-                self.logger.error("Failed to upload chain %s: %s", safe_uuid, e)
+                self.logger.error("Failed to upload chain %s: %s", object_key, e)
 
         # Clear accumulated data
         self.responses.clear()
