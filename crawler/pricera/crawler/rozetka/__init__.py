@@ -6,11 +6,15 @@ from pricera.common.collectors import BaseCollector
 class RozetkaProductCrawler(BaseCollector):
     urls: list[str]
     payload_key: str = "rozetka_product"
+    bucket: str = "pricera-crawled-data"
+    path: str = "rozetka_product/"
 
     def crawl(self):
         from pricera.crawler.rozetka.spiders.product_spider import RozetkaProductSpider
 
-        return self.process_scrapy_spider(spider_cls=RozetkaProductSpider, urls=self.urls, proxy_config=None)
+        return self.process_scrapy_spider(
+            RozetkaProductSpider, s3_bucket=self.bucket, s3_prefix=self.path, urls=self.urls, proxy_config=None
+        )
 
     @classmethod
     def get_crawler(cls, message: dict) -> "RozetkaProductCrawler":
