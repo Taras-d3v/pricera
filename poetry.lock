@@ -910,6 +910,20 @@ type = "directory"
 url = "common"
 
 [[package]]
+name = "pricera-crawler"
+version = "0.1.0"
+description = ""
+optional = false
+python-versions = ">=3.13"
+groups = ["main"]
+files = []
+develop = true
+
+[package.source]
+type = "directory"
+url = "crawler"
+
+[[package]]
 name = "pricera-hotline"
 version = "0.1.0"
 description = ""
@@ -939,6 +953,20 @@ develop = true
 [package.source]
 type = "directory"
 url = "models"
+
+[[package]]
+name = "pricera-parser"
+version = "0.1.0"
+description = ""
+optional = false
+python-versions = ">=3.13"
+groups = ["main"]
+files = []
+develop = true
+
+[package.source]
+type = "directory"
+url = "parser"
 
 [[package]]
 name = "protego"
@@ -1681,4 +1709,4 @@ testing = ["coverage[toml]", "zope.event", "zope.testing"]
 [metadata]
 lock-version = "2.1"
 python-versions = "3.13.1"
-content-hash = "735d9c42371db68e0e95237b0a87c65ba88c2aba902cda0d142064bc11f2b347"
+content-hash = "98b01609626432514822dc6e3e1e91cbaa90bd64a02d0523c6a273b35f3a23ee"
