@@ -10,4 +10,4 @@ class ResponseObject:
     url: str
     text: str
     status: int
-    chain_uuid: str
+    object_key: str
