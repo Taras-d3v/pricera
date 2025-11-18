@@ -12,9 +12,9 @@ from scrapy.exceptions import DropItem
 
 class S3Pipeline:
     """
-    Pipeline collects incoming items by `chain_uuid` and, when the spider closes,
-    uploads each chain to a separate file in S3 in JSON Lines format.
-    Each item is expected to contain the `chain_uuid` field.
+    Pipeline collects incoming items by `object_key` and, when the spider closes,
+    uploads each request chain to a separate file in S3 in JSON Lines format.
+    Each item is expected to contain the `object_key` field.
     Scrapy settings expected:
       - S3_BUCKET_NAME
       - S3_PREFIX
@@ -62,7 +62,7 @@ class S3Pipeline:
         object_key = item.get("object_key")
         if not object_key:
             # If there's no object_key — log and drop the item; modify behaviour if needed
-            raise DropItem("Missing chain_uuid in item")
+            raise DropItem("Missing object_key in item")
 
         # Convert the item to a serializable structure (usually a dict)
         try:
@@ -76,7 +76,7 @@ class S3Pipeline:
 
     def spider_closed(self, spider, reason):
         """
-        Called when the spider is closed — uploads each chain to a separate file.
+        Called when the spider is closed — uploads each request chain to a separate file.
         """
         if not self.responses:
             self.logger.debug("No responses collected, skipping S3 upload.")
