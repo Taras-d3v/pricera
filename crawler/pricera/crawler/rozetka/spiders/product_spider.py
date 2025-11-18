@@ -40,5 +40,5 @@ class RozetkaProductSpider(BaseSpider):
             url=response.url,
             text=response.text,
             status=response.status,
-            chain_uuid=response.meta["chain_uuid"],
+            object_key=response.meta["object_key"],
         )
