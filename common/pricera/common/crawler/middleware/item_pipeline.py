@@ -11,7 +11,7 @@ from scrapy import signals
 from scrapy.exceptions import DropItem
 
 
-class S3ChainUploadPipeline:
+class S3Pipeline:
     """
     Pipeline collects incoming items by `chain_uuid` and, when the spider closes,
     uploads each chain to a separate file in S3 in JSON Lines format.
@@ -47,9 +47,9 @@ class S3ChainUploadPipeline:
 
     @classmethod
     def from_crawler(cls, crawler):
-        settings = crawler.settings
-        bucket_name = settings.get("S3_BUCKET_NAME")
-        prefix = settings.get("S3_PREFIX")
+        spider = crawler.spider
+        bucket_name = spider.s3_bucket
+        prefix = spider.s3_prefix
 
         pipeline = cls(
             bucket_name=bucket_name,
