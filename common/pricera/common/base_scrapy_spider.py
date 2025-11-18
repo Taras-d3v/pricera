@@ -11,9 +11,11 @@ class BaseSpider(Spider):
         "RETRY_TIMES": 3,  # Retry failed requests up to 3 times
     }
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, s3_bucket: str, s3_prefix: str, *args, **kwargs):
         Spider.__init__(self, *args, **kwargs)
-        self.responses = defaultdict(list)
+        self.s3_bucket: str = s3_bucket
+        self.s3_prefix: str = s3_prefix
+        self.responses: defaultdict = defaultdict(list)
 
     def start_requests(self):
         """Generate initial requests with chain UUIDs"""
