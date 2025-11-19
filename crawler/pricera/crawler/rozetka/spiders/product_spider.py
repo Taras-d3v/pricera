@@ -1,4 +1,4 @@
-from typing import Any, Iterable
+from typing import Iterator
 
 from scrapy.http import Response
 
@@ -35,10 +35,5 @@ class RozetkaProductSpider(BaseSpider):
         super().__init__(*args, **kwargs)
         self.start_urls = start_urls
 
-    def parse(self, response: Response, *args, **kwargs) -> Iterable[Any]:
-        yield ResponseObject(
-            url=response.url,
-            text=response.text,
-            status=response.status,
-            object_key=response.meta["object_key"],
-        )
+    def parse(self, response: Response, *args, **kwargs) -> Iterator[ResponseObject]:
+        yield self.collect_response(response=response)

@@ -4,10 +4,10 @@ import json
 import logging
 import os
 from collections import defaultdict
-
+from pricera.models import ResponseObject
+import gzip
 import boto3
 from scrapy import signals
-from scrapy.exceptions import DropItem
 
 
 class S3Pipeline:
@@ -24,8 +24,8 @@ class S3Pipeline:
         self.logger = logging.getLogger(self.__class__.__name__)
         self.s3 = boto3.client(
             "s3",
-            aws_access_key_id=self.aws_secret_access_key,
-            aws_secret_access_key=self.aws_access_key_id,
+            aws_access_key_id=self.aws_access_key_id,
+            aws_secret_access_key=self.aws_secret_access_key,
             region_name=self.aws_region,
         )
         self.bucket: str = bucket_name
@@ -58,20 +58,12 @@ class S3Pipeline:
         crawler.signals.connect(pipeline.spider_closed, signals.spider_closed)
         return pipeline
 
-    def process_item(self, item, spider):
-        object_key = item.get("object_key")
-        if not object_key:
-            # If there's no object_key — log and drop the item; modify behaviour if needed
-            raise DropItem("Missing object_key in item")
+    def process_item(self, item: ResponseObject, spider):
+        object_key = item.object_key
 
-        # Convert the item to a serializable structure (usually a dict)
-        try:
-            serializable = dict(item)
-        except Exception:
-            # As a fallback — convert values to strings
-            serializable = {k: str(v) for k, v in item.items()}
-
-        self.responses[object_key].append(serializable)
+        self.responses[object_key].append(
+            {"url": item.url, "text": item.text, "status": item.status, "object_key": item.object_key}
+        )
         return item
 
     def spider_closed(self, spider, reason):
@@ -83,19 +75,23 @@ class S3Pipeline:
             return
 
         for object_key, items in self.responses.items():
-            key = f"{self.prefix.rstrip('/')}/{object_key}"
+            key = f"{self.prefix.rstrip('/')}/{object_key}.jsonl.gz"
 
             bio = io.BytesIO()
-            for it in items:
-                line = json.dumps(it, default=str, ensure_ascii=False)
-                bio.write(line.encode("utf-8"))
-                bio.write(b"\n")
+
+            with gzip.GzipFile(fileobj=bio, mode="wb", filename=f"{object_key}.jsonl") as gz:
+                for it in items:
+                    line = json.dumps(it, default=str, ensure_ascii=False) + "\n"
+                    gz.write(line.encode("utf-8"))
             bio.seek(0)
 
+            extra_args = {
+                "ContentType": "application/gzip",
+            }
+
             try:
-                # Upload the object to S3
-                self.s3.upload_fileobj(bio, self.bucket, key)
-                self.logger.info("Uploaded chain %s to s3://%s/%s", object_key, self.bucket, key)
+                self.s3.upload_fileobj(bio, self.bucket, key, ExtraArgs=extra_args)
+                self.logger.info("Uploaded gzipped chain %s to s3://%s/%s", object_key, self.bucket, key)
             except Exception as e:
                 self.logger.error("Failed to upload chain %s: %s", object_key, e)
 
