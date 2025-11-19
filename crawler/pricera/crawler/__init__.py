@@ -1,4 +1,4 @@
-from pricera.crawler.rozetka import RozetkaProductCrawler
+from pricera.crawler.rozetka.product_crawler import RozetkaProductCrawler
 
 # explicitly defined payload key to crawler mapping:
 PAYLOAD_KEY_TO_CRAWLER = {
