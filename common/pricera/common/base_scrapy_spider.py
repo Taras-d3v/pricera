@@ -1,7 +1,8 @@
-from collections import defaultdict
-
+from scrapy.http import Response
+from pricera.models import ResponseObject
 import scrapy
 from scrapy import Spider
+import hashlib
 
 
 class BaseSpider(Spider):
@@ -10,11 +11,18 @@ class BaseSpider(Spider):
         "RETRY_TIMES": 3,  # Retry failed requests up to 3 times
     }
 
-    def __init__(self, s3_bucket: str, s3_prefix: str, *args, **kwargs):
+    def __init__(self, s3_prefix: str, s3_bucket: str, *args, **kwargs):
         Spider.__init__(self, *args, **kwargs)
         self.s3_bucket: str = s3_bucket
         self.s3_prefix: str = s3_prefix
-        self.responses: defaultdict = defaultdict(list)
+
+    def collect_response(self, response: Response) -> ResponseObject:
+        return ResponseObject(
+            url=response.url,
+            text=response.text,
+            status=response.status,
+            object_key=response.meta["object_key"],
+        )
 
     def start_requests(self):
         """Generate initial requests with chain UUIDs"""
@@ -24,6 +32,6 @@ class BaseSpider(Spider):
                     url=url,
                     callback=self.parse,
                     meta={
-                        "object_key": url,
+                        "object_key": hashlib.md5(url.encode()).hexdigest(),
                     },
                 )
