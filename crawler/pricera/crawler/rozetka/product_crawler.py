@@ -19,4 +19,4 @@ class RozetkaProductCrawler(BaseCollector):
     @classmethod
     def get_crawler(cls, message: dict) -> "RozetkaProductCrawler":
         payload = message["payload"]
-        return RozetkaProductCrawler(urls=payload[cls.payload_key])
+        return cls(urls=payload[cls.payload_key])

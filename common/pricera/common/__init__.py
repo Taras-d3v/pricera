@@ -27,7 +27,7 @@ class MessageProcessor:
     factory: Any
 
     def process(self, message: dict) -> None:
-        self.pipeline(message=message, crawler_factory=self.factory)
+        self.pipeline(message=message, factory=self.factory)
 
 
 def launch_collector(
