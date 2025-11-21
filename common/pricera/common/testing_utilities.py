@@ -1,27 +1,26 @@
 import os
+import gzip
+from typing import Union, List
 
 
 def load_file_from_sub_folder(
     filename: str,
-    base_dir: str = os.getcwd(),  # This gets the launch directory
+    test_file_path: str,
     sub_folder: str = "test_cases",
-    mode: str = "r",
-    encoding: str = "utf-8",
-) -> str:
-    """
-    Loads a file from a subfolder relative to the launch directory.
+) -> Union[str, List[dict]]:
 
-    :param filename: name of the file (e.g., "hotline_listings.html")
-    :param base_dir: base directory (defaults to current working directory - launch dir)
-    :param sub_folder: name of the subfolder (e.g., "test_cases")
-    :param mode: file open mode (default: 'r')
-    :param encoding: file encoding (default: 'utf-8')
-    :return: file content as a string
-    """
-    file_path = os.path.join(base_dir, sub_folder, filename)
+    # Get the directory containing the test file
+    test_file_dir = os.path.dirname(test_file_path)
+
+    # Build the correct path: test_file_dir + sub_folder + filename
+    file_path = os.path.join(test_file_dir, sub_folder, filename)
 
     if not os.path.exists(file_path):
         raise FileNotFoundError(f"File not found: {file_path}")
 
-    with open(file_path, mode, encoding=encoding) as f:
-        return f.read()
+    if filename.endswith(".gz"):
+        with gzip.open(file_path, mode="rt", encoding="utf-8") as gz_file:
+            return gz_file.read()
+    else:
+        with open(file_path, "r", encoding="utf-8") as f:
+            return f.read()
