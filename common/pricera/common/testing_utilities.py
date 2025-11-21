@@ -8,7 +8,6 @@ def load_file_from_sub_folder(
     test_file_path: str,
     sub_folder: str = "test_cases",
 ) -> Union[str, List[dict]]:
-
     # Get the directory containing the test file
     test_file_dir = os.path.dirname(test_file_path)
 
