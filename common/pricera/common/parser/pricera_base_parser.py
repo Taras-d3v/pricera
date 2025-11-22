@@ -3,7 +3,6 @@ import boto3
 from botocore.exceptions import ClientError
 import io
 import gzip
-import json
 
 
 class BaseParser:
@@ -32,7 +31,11 @@ class BaseParser:
 
             # Auto-detect gzipped files by extension
             if filename.endswith(".gz"):
-                return BaseParser._read_gzipped_content(file_content, filename)
+                bio = io.BytesIO(file_content)
+
+                with gzip.GzipFile(fileobj=bio, mode="rb") as gz_file:
+                    decompressed_data = gz_file.read().decode("utf-8")
+                    return decompressed_data
             else:
                 return file_content.decode("utf-8")
 
@@ -46,40 +49,3 @@ class BaseParser:
                 # todo: replace with proper logging
                 print(f"S3 error: {exception}")
                 raise IOError(f"S3 error loading file s3://{bucket}/{key}: {exception}")
-
-    @staticmethod
-    def _read_gzipped_content(compressed_data: bytes, filename: str) -> Union[str, List[dict]]:
-        """
-        Read gzipped content and return appropriate format based on file type.
-
-        :param compressed_data: gzipped data as bytes
-        :param filename: original filename to determine content type
-        :return: string for text files, list of dicts for JSONL files
-        """
-        # Decompress the data
-        bio = io.BytesIO(compressed_data)
-
-        with gzip.GzipFile(fileobj=bio, mode="rb") as gz_file:
-            decompressed_data = gz_file.read().decode("utf-8")
-            return decompressed_data
-
-        # # Check if it's JSONL format (multiple JSON objects, one per line)
-        # if filename.endswith('.jsonl.gz') or filename.endswith('.json.gz'):
-        #     return BaseParser._parse_jsonl_content(decompressed_data)
-        # else:
-        #     # For other gzipped files, return as text
-        #     return decompressed_data
-
-    @staticmethod
-    def _parse_jsonl_content(jsonl_content: str) -> List[dict]:
-        """
-        Parse JSONL content into a list of dictionaries.
-
-        :param jsonl_content: JSONL content as string
-        :return: list of parsed JSON objects
-        """
-        items = []
-        for line in jsonl_content.strip().split("\n"):
-            if line.strip():  # Skip empty lines
-                items.append(json.loads(line.strip()))
-        return items
