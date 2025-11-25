@@ -2,7 +2,6 @@ from scrapy.http import Response
 from pricera.models import ResponseObject
 import scrapy
 from scrapy import Spider
-import hashlib
 
 
 class BaseSpider(Spider):
@@ -29,9 +28,9 @@ class BaseSpider(Spider):
         if hasattr(self, "start_urls"):
             for url in self.start_urls:
                 yield scrapy.Request(
-                    url=url,
+                    url=url.url,
                     callback=self.parse,
                     meta={
-                        "object_key": hashlib.md5(url.encode()).hexdigest(),
+                        "object_key": url.hash,
                     },
                 )
