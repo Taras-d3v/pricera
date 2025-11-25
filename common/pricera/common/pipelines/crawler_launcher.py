@@ -1,8 +1,8 @@
-from pricera.crawler.rozetka.product_crawler import RozetkaProductCrawler
+from pricera.rozetka.rozetka_product_collector import RozetkaProductCollector
 
 # explicitly defined payload key to crawler mapping:
 PAYLOAD_KEY_TO_CRAWLER = {
-    RozetkaProductCrawler.payload_key: RozetkaProductCrawler,
+    RozetkaProductCollector.payload_key: RozetkaProductCollector,
 }
 
 
@@ -22,6 +22,6 @@ class CrawlerFactory:
 
 
 if __name__ == "__main__":
-    from pricera.crawler.crawler_pipeline import launch_crawler
+    from pricera.common.pipelines.crawler_pipeline import launch_crawler
 
     launch_crawler(factory=CrawlerFactory)
