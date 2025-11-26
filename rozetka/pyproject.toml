@@ -1,10 +1,10 @@
 [tool.poetry]
-name = "pricera.parser"
+name = "pricera.rozetka"
 version = "0.1.0"
 description = ""
 authors = []
 packages=[
-    {include="pricera/parser/*"}
+    {include="pricera/rozetka/*"}
 ]
 
 [tool.poetry.dependencies]

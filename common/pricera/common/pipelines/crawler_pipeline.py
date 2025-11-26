@@ -2,8 +2,8 @@ from typing import Callable
 from pricera.common import FileBasedMessageConsumer, MessageProcessor, RabbitMQ, get_file_args
 
 
-def crawler_pipeline(crawler_factory, message: dict) -> None:
-    collector = crawler_factory.get_crawler(message=message)
+def crawler_pipeline(factory, message: dict) -> None:
+    collector = factory.get_crawler(message=message)
     collector.crawl()
 
 

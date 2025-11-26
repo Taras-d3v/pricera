@@ -1,4 +1,4 @@
-__all__ = ["RequestChainItemPipeline", "PriceraImpersonateDownloadHandler"]
+__all__ = ["PriceraImpersonateDownloadHandler", "S3Pipeline"]
 
-from .request_chain_pipeline import RequestChainItemPipeline
 from .impersonate_download_handler import PriceraImpersonateDownloadHandler
+from .item_pipeline import S3Pipeline

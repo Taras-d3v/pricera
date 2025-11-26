@@ -1,8 +1,8 @@
-from pricera.parser.rozetka.rozetka_parser import RozetkaProductParser
+from pricera.rozetka.rozetka_product_collector import RozetkaProductCollector
 
 # explicitly defined payload key to crawler mapping:
 PAYLOAD_KEY_TO_PARSER = {
-    RozetkaProductParser.payload_key: RozetkaProductParser,
+    RozetkaProductCollector.payload_key: RozetkaProductCollector,
 }
 
 
@@ -22,6 +22,6 @@ class ParserFactory:
 
 
 if __name__ == "__main__":
-    from pricera.parser.rozetka.parser_pipeline import launch_parser
+    from pricera.common.pipelines.parser_pipeline import launch_parser
 
     launch_parser(factory=ParserFactory)

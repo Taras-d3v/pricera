@@ -1,7 +1,7 @@
 import unittest
 import os
 from pricera.common import load_file_from_sub_folder
-from pricera.parser.rozetka.product_parser import RozetkaProductParser
+from pricera.rozetka.parsers import RozetkaProductParser
 
 
 class TestRozetkaProductParser(unittest.TestCase):
