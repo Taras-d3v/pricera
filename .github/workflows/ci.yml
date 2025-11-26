@@ -23,7 +23,7 @@ jobs:
         run: pre-commit run --all-files --show-diff-on-failure
 
   pytest:
-    needs: pre-commit        # дождаться успешного pre-commit
+    needs: pre-commit
     runs-on: ubuntu-latest
 
     steps:
