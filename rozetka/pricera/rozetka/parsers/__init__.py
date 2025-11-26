@@ -1,3 +1,3 @@
 __all__ = ["RozetkaProductParser"]
 
-from .rozetka_product_parser import RozetkaProductParser
+from pricera.rozetka.parsers.rozetka_product_parser import RozetkaProductParser
