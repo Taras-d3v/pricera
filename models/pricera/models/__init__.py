@@ -1,9 +1,8 @@
-__all__ = ["ResponseObject", "HotlineListingsModel", "HotlineItemOfferModel", "URLWithHash"]
+__all__ = ["ResponseObject", "URLWithHash"]
 
 from dataclasses import dataclass
 from pydantic import BaseModel, Field
 import hashlib
-from .hotline.listings_model import HotlineItemOfferModel, HotlineListingsModel
 
 
 @dataclass
