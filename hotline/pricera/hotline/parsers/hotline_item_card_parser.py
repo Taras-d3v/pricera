@@ -55,4 +55,6 @@ class HotlineItemCardParser:
         raw_title_text = soup.find("title").text.strip()
 
         card_title = re.match(pattern=r"^(.*?)\s*купити в інтернет-магазині", string=raw_title_text)
+        if not card_title:
+            raise ValueError(f"Cannot parse item card title from raw title: {raw_title_text}")
         return card_title.group(1).strip()
