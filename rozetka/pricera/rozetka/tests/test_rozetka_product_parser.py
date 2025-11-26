@@ -10,7 +10,7 @@ class TestRozetkaProductParser(unittest.TestCase):
             test_file_path=os.path.abspath(__file__), filename="20-11-2025-rozetka-product.jsonl.gz"
         )
         expected_result = {
-            "brand": "Apple",
+            "brand": "Apples",
             "category_title": "Мобільні телефони",
             "description": 'Екран (6.9", OLED (Super Retina XDR), 2868x1320) / Apple A19 '
             "Pro / основна потрійна камера: 48 Мп + 48 Мп + 48 Мп, "
