@@ -5,9 +5,8 @@ class HotlineItemOfferModel(BaseModel):
     shop_name: str
     item_name: str
     item_url: str
-    price: float
 
 
-class HotlineListingsModel(BaseModel):
+class HotlineItemCardModel(BaseModel):
     title: str
-    items: list[HotlineItemOfferModel] = []
+    offers: list[HotlineItemOfferModel] = []
