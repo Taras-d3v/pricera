@@ -1,6 +1,9 @@
 from dataclasses import dataclass
 from pricera.common.collectors import BaseCollector
 from pricera.models import URLWithHash
+import logging
+
+logger = logging.getLogger("rozetka_product_collector")
 
 
 @dataclass
@@ -42,8 +45,7 @@ class RozetkaProductCollector(BaseCollector):
         try:
             RozetkaProductParser.parse(file)
         except Exception as e:
-            # todo: replace with proper logging
-            print(e)
+            logger.error("Error during rozetka product parsing", exc_info=e)
 
     @classmethod
     def get_parser(cls, message=dict) -> "RozetkaProductCollector":
