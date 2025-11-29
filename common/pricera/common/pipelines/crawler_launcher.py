@@ -25,5 +25,7 @@ class CrawlerFactory:
 
 if __name__ == "__main__":
     from pricera.common.pipelines.crawler_pipeline import launch_crawler
+    from pricera.common.logger import set_logger
 
+    set_logger()
     launch_crawler(factory=CrawlerFactory)

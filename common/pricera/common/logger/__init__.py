@@ -8,7 +8,7 @@ logger = logging.getLogger("logger_init")
 
 def set_logger():
     current_dir = os.path.dirname(os.path.abspath(__file__))
-    config_path = os.path.join(current_dir, "logging.yaml")
+    config_path = os.path.join(current_dir, "logging.json")
 
     try:
         with open(config_path, "r", encoding="utf-8") as f:
