@@ -2,7 +2,7 @@ from typing import Iterator
 
 from scrapy.http import Response, Request
 
-from pricera.common.base_scrapy_spider import BaseSpider
+from pricera.common.scrapy import BaseSpider
 from pricera.models import ResponseObject
 from pricera.models import URLWithHash
 
@@ -28,11 +28,11 @@ class RozetkaProductSpider(BaseSpider):
             "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
         },
         "ITEM_PIPELINES": {
-            "pricera.common.middlewares.S3Pipeline": 300,
+            "pricera.common.scrapy.S3Pipeline": 300,
         },
         "DOWNLOAD_HANDLERS": {
-            "http": "pricera.common.middlewares.PriceraImpersonateDownloadHandler",
-            "https": "pricera.common.middlewares.PriceraImpersonateDownloadHandler",
+            "http": "pricera.common.scrapy.PriceraImpersonateDownloadHandler",
+            "https": "pricera.common.scrapy.PriceraImpersonateDownloadHandler",
         },
     }
 
