@@ -1,7 +1,7 @@
 import logging
 import logging.config
-import yaml
 import os
+import json
 
 logger = logging.getLogger("logger_init")
 
@@ -11,8 +11,8 @@ def set_logger():
     config_path = os.path.join(current_dir, "logging.yaml")
 
     try:
-        with open(config_path, "r") as f:
-            config = yaml.safe_load(f)
+        with open(config_path, "r", encoding="utf-8") as f:
+            config = json.load(f)
         logging.config.dictConfig(config)
         logger.info("Logger configuration loaded successfully")
     except FileNotFoundError:
