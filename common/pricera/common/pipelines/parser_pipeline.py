@@ -1,20 +1,21 @@
-from typing import Callable
-from pricera.common import FileBasedMessageConsumer, MessageProcessor, RabbitMQ, get_file_args
+from pricera.common.pipelines.collector_mapping import PAYLOAD_KEY_TO_PARSER
 
 
-def parser_pipeline(factory, message: dict) -> None:
+class ParserFactory:
+    @staticmethod
+    def get_message_key_from_message(message: dict) -> str:
+        message_payload = message["payload"]
+        # todo: handle multiple keys in payload
+        message_key = list(message_payload.keys())[0]
+        return message_key
+
+    @classmethod
+    def get_parser(cls, message: dict):
+        message_key = cls.get_message_key_from_message(message)
+        parser_cls = PAYLOAD_KEY_TO_PARSER[message_key]
+        return parser_cls.get_parser(message=message)
+
+
+def parser_pipeline(message: dict, factory=ParserFactory) -> None:
     parser = factory.get_parser(message=message)
     parser.parse()
-
-
-def launch_parser(factory, pipeline: Callable = parser_pipeline, queue: str = "parser_queue") -> None:
-    message_processor = MessageProcessor(pipeline=pipeline, factory=factory)
-    args = get_file_args()
-    if args.file:
-        file_consumer: FileBasedMessageConsumer = FileBasedMessageConsumer(
-            function=message_processor.process, file_path=args.file
-        )
-        file_consumer.consume()
-    else:
-        rabbitmq_consumer: RabbitMQ = RabbitMQ()
-        rabbitmq_consumer.consume(function=message_processor.process, queue=queue)
