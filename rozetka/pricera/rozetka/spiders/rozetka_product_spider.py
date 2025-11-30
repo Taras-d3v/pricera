@@ -5,6 +5,7 @@ from scrapy.http import Response, Request
 from pricera.common.scrapy import BaseSpider
 from pricera.models import ResponseObject
 from pricera.models import URLWithHash
+from pricera.rozetka.parsers import RozetkaProductParser
 
 
 class RozetkaProductSpider(BaseSpider):
@@ -42,7 +43,7 @@ class RozetkaProductSpider(BaseSpider):
 
     def start_requests(self):
         for url in self.start_urls:
-            product_id = self.get_product_id_from_url(url.url)
+            product_id = RozetkaProductParser.get_product_id_from_url(url.url)
             api_url = f"https://common-api.rozetka.com.ua/v1/api/product/details?country=UA&lang=ua&ids={product_id}"
 
             yield Request(
@@ -55,12 +56,3 @@ class RozetkaProductSpider(BaseSpider):
 
     def parse(self, response: Response, *args, **kwargs) -> Iterator[ResponseObject]:
         yield self.collect_response(response=response)
-
-    @staticmethod
-    def get_product_id_from_url(url: str) -> str:
-        import re
-
-        match = re.search(r"/p(\d+)/?$", url)
-        if not match:
-            raise ValueError(f"Can't extract product id from url: {url}")
-        return match.group(1)
