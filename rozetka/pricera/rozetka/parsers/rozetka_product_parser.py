@@ -29,3 +29,12 @@ class RozetkaProductParser:
         for key in ["main", "hover"]:
             result.append(ImageModel(url=images[key]))
         return result
+
+    @staticmethod
+    def get_product_id_from_url(url: str) -> str:
+        import re
+
+        match = re.search(r"/p(\d+)/?$", url)
+        if not match:
+            raise ValueError(f"Can't extract product id from url: {url}")
+        return match.group(1)

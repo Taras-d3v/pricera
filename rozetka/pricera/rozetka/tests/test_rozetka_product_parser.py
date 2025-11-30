@@ -32,7 +32,18 @@ class TestRozetkaProductParser(unittest.TestCase):
         }
         self.assertEqual(expected_result, RozetkaProductParser.parse(product_blob))
 
+    def test_get_product_id_from_url(self):
+        url = "https://rozetka.com.ua/apple_iphone_17_pro_max_256gb_cosmic_orange_mfyn4af_a/p594364393/"
+        expected_product_id = "594364393"
+        self.assertEqual(expected_product_id, RozetkaProductParser.get_product_id_from_url(url))
 
-# Add this to run with standard unittest
+        url_no_slash = "https://rozetka.com.ua/apple_iphone_17_pro_max_256gb_cosmic_orange_mfyn4af_a/p594364393"
+        self.assertEqual(expected_product_id, RozetkaProductParser.get_product_id_from_url(url_no_slash))
+
+        invalid_url = "https://rozetka.com.ua/apple_iphone_17_pro_max_256gb_cosmic_orange_mfyn4af_a/"
+        with self.assertRaises(ValueError):
+            RozetkaProductParser.get_product_id_from_url(invalid_url)
+
+
 if __name__ == "__main__":
     unittest.main()
