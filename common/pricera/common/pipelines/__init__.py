@@ -1,3 +1,4 @@
-__all__ = ["launch_crawler"]
+__all__ = ["crawler_pipeline", "parser_pipeline"]
 
-from .crawler_pipeline import launch_crawler
+from .crawler_pipeline import crawler_pipeline
+from .parser_pipeline import parser_pipeline
