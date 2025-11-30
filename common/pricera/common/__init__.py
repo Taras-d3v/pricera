@@ -7,5 +7,4 @@ __all__ = [
 
 
 from .collectors import BaseCollector, FileBasedMessageConsumer, RabbitMQ
-from .etl_pipeline import etl_pipeline
 from .testing_utilities import load_file_from_sub_folder
