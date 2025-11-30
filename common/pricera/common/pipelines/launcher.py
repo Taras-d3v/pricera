@@ -8,12 +8,12 @@ from typing import Callable
 logger = logging.getLogger("launcher")
 
 
-pipeline_name_to_queue_mapping = {
+pipeline_type_to_queue_mapping = {
     "crawl": "crawler_queue",
     "parse": "parser_queue",
 }
 
-pipeline_name_to_pipeline_mapping = {
+pipeline_type_to_pipeline_mapping = {
     "crawl": crawler_pipeline,
     "parse": parser_pipeline,
 }
@@ -54,7 +54,7 @@ if __name__ == "__main__":
         logger.error("No file path/mq broker was set in arguments. Exiting.")
         exit(1)
 
-    pipeline = pipeline_name_to_pipeline_mapping[args.pipeline_type]
+    pipeline = pipeline_type_to_pipeline_mapping[args.pipeline_type]
     message_processor = MessageProcessor(pipeline=pipeline)
 
     if args.file:
@@ -64,6 +64,6 @@ if __name__ == "__main__":
         file_consumer.consume()
 
     else:
-        queue = pipeline_name_to_queue_mapping[args.pipeline_type]
+        queue = pipeline_type_to_queue_mapping[args.pipeline_type]
         rabbitmq_consumer: RabbitMQ = RabbitMQ()
         rabbitmq_consumer.consume(function=message_processor.process, queue=queue)
