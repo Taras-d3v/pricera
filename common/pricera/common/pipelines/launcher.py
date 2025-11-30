@@ -58,12 +58,10 @@ if __name__ == "__main__":
     message_processor = MessageProcessor(pipeline=pipeline)
 
     if args.file:
-        file_consumer: FileBasedMessageConsumer = FileBasedMessageConsumer(
-            function=message_processor.process, file_path=args.file
-        )
+        file_consumer = FileBasedMessageConsumer(function=message_processor.process, file_path=args.file)
         file_consumer.consume()
 
     else:
         queue = pipeline_type_to_queue_mapping[args.pipeline_type]
-        rabbitmq_consumer: RabbitMQ = RabbitMQ()
+        rabbitmq_consumer = RabbitMQ()
         rabbitmq_consumer.consume(function=message_processor.process, queue=queue)
