@@ -1,19 +1,20 @@
-from pricera.common import FileBasedMessageConsumer, RabbitMQ
-from pricera.common.pipelines import crawler_pipeline, parser_pipeline
-import logging
 import argparse
+import logging
 from dataclasses import dataclass
 from typing import Callable
+from pricera.common.logger import set_logger
+from pricera.common import FileBasedMessageConsumer, RabbitMQ
+from pricera.common.pipelines import crawler_pipeline, parser_pipeline
 
 logger = logging.getLogger("launcher")
 
 
-pipeline_type_to_queue_mapping = {
+PIPELINE_TO_QUEUE = {
     "crawl": "crawler_queue",
     "parse": "parser_queue",
 }
 
-pipeline_type_to_pipeline_mapping = {
+PIPELINE_TO_FUNCTION = {
     "crawl": crawler_pipeline,
     "parse": parser_pipeline,
 }
@@ -21,47 +22,61 @@ pipeline_type_to_pipeline_mapping = {
 
 def get_launcher_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--file", type=str, help="Path to the message file", required=False)
+
+    parser.add_argument("--file", type=str, help="Path to the message file")
     parser.add_argument("--rabbitmq", action="store_true", help="Enable RabbitMQ mode")
     parser.add_argument(
-        "--pipeline_type", type=str, choices=["crawl", "parse"], help="Type of pipeline to run", required=False
+        "--pipeline_type",
+        type=str,
+        choices=list(PIPELINE_TO_FUNCTION.keys()),
+        required=True,
+        help="Type of pipeline to run",
     )
 
-    args = parser.parse_args()
-    return args
+    return parser.parse_args()
+
+
+def validate_args(args: argparse.Namespace) -> None:
+    if args.file and args.rabbitmq:
+        logger.error("You cannot use both file mode and RabbitMQ mode at the same time.")
+        exit(1)
+
+    if not args.file and not args.rabbitmq:
+        logger.error("You must specify either --file or --rabbitmq.")
+        exit(1)
 
 
 @dataclass
 class MessageProcessor:
-    pipeline: Callable  # crawler_pipeline
+    pipeline: Callable
 
     def process(self, message: dict) -> None:
         self.pipeline(message=message)
 
 
-if __name__ == "__main__":
-    from pricera.common.logger import set_logger
-
-    set_logger()
-
+def main() -> None:
     args = get_launcher_args()
+    validate_args(args)
 
-    if not args.pipeline_type:
-        logger.error("No pipeline type specified in arguments. Exiting.")
-        exit(1)
-
-    if not args.file or args.rabbitmq:
-        logger.error("No file path/mq broker was set in arguments. Exiting.")
-        exit(1)
-
-    pipeline = pipeline_type_to_pipeline_mapping[args.pipeline_type]
-    message_processor = MessageProcessor(pipeline=pipeline)
+    pipeline = PIPELINE_TO_FUNCTION[args.pipeline_type]
+    processor = MessageProcessor(pipeline=pipeline)
 
     if args.file:
-        file_consumer = FileBasedMessageConsumer(function=message_processor.process, file_path=args.file)
-        file_consumer.consume()
+        logger.info(f"Starting file consumer for file: {args.file}")
+        consumer = FileBasedMessageConsumer(
+            function=processor.process,
+            file_path=args.file,
+        )
+        consumer.consume()
 
     else:
-        queue = pipeline_type_to_queue_mapping[args.pipeline_type]
-        rabbitmq_consumer = RabbitMQ()
-        rabbitmq_consumer.consume(function=message_processor.process, queue=queue)
+        queue = PIPELINE_TO_QUEUE[args.pipeline_type]
+        logger.info(f"Starting RabbitMQ consumer on queue: {queue}")
+
+        consumer = RabbitMQ()
+        consumer.consume(function=processor.process, queue=queue)
+
+
+if __name__ == "__main__":
+    set_logger()
+    main()
