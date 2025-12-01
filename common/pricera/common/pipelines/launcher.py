@@ -32,8 +32,9 @@ def get_launcher_args() -> argparse.Namespace:
         required=True,
         help="Type of pipeline to run",
     )
-
-    return parser.parse_args()
+    args = parser.parse_args()
+    validate_args(args)
+    return args
 
 
 def validate_args(args: argparse.Namespace) -> None:
@@ -56,7 +57,6 @@ class MessageProcessor:
 
 def main() -> None:
     args = get_launcher_args()
-    validate_args(args)
 
     pipeline = PIPELINE_TO_FUNCTION[args.pipeline_type]
     processor = MessageProcessor(pipeline=pipeline)
