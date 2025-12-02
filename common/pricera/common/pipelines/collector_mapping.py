@@ -13,6 +13,4 @@ PAYLOAD_KEY_TO_CRAWLER = DEFAULT_MAPPING | {
 
 
 # explicitly defined payload key to parser mapping:
-PAYLOAD_KEY_TO_PARSER = DEFAULT_MAPPING | {
-    RozetkaProductParser.payload_key: RozetkaProductParser
-}
+PAYLOAD_KEY_TO_PARSER = DEFAULT_MAPPING | {RozetkaProductParser.payload_key: RozetkaProductParser}
