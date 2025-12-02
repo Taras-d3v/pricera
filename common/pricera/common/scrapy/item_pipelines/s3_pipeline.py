@@ -50,8 +50,8 @@ class S3Pipeline:
     @classmethod
     def from_crawler(cls, crawler):
         spider = crawler.spider
-        bucket_name = spider.s3_bucket
-        prefix = spider.s3_prefix
+        bucket_name = spider.storage_bucket
+        prefix = spider.storage_prefix
 
         pipeline = cls(
             bucket_name=bucket_name,
