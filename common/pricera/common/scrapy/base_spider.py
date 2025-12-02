@@ -10,10 +10,10 @@ class BaseSpider(Spider):
         "RETRY_TIMES": 3,  # Retry failed requests up to 3 times
     }
 
-    def __init__(self, s3_prefix: str, s3_bucket: str, *args, **kwargs):
+    def __init__(self, storage_bucket: str, storage_prefix: str, *args, **kwargs):
         Spider.__init__(self, *args, **kwargs)
-        self.s3_bucket: str = s3_bucket
-        self.s3_prefix: str = s3_prefix
+        self.storage_bucket: str = storage_bucket
+        self.storage_prefix: str = storage_prefix
 
     def collect_response(self, response: Response) -> ResponseObject:
         return ResponseObject(
