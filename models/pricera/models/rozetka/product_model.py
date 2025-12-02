@@ -14,7 +14,7 @@ class RozetkaProductModel(BaseModel):
     description: str
     images: list[ImageModel]
     reviews: int
-    review_rating: int
+    review_rating: float
 
     price: int
     old_price: int
