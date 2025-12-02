@@ -5,6 +5,7 @@ from copy import deepcopy
 
 logger = getLogger("parser_pipeline")
 
+
 class ParserFactory:
     @staticmethod
     def get_message_key_from_message(message: dict) -> str:
