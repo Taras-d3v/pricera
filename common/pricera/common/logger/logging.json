@@ -16,6 +16,7 @@
       }
     }
   },
+
   "handlers": {
     "console": {
       "class": "logging.StreamHandler",
@@ -29,6 +30,24 @@
     "": {
       "level": "INFO",
       "handlers": ["console"],
+      "propagate": false
+    },
+
+    "boto3": {
+      "level": "INFO",
+      "handlers": [],
+      "propagate": false
+    },
+
+    "botocore": {
+      "level": "INFO",
+      "handlers": [],
+      "propagate": false
+    },
+
+    "s3transfer": {
+      "level": "INFO",
+      "handlers": [],
       "propagate": false
     }
   }
