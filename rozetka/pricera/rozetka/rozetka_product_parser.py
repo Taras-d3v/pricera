@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from pricera.common.collectors import BaseCollector
 import logging
-from rozetka_mixins import RozetkaProductMixin
+from pricera.rozetka.rozetka_mixins import RozetkaProductMixin
 
 logger = logging.getLogger("rozetka_product_parser")
 
