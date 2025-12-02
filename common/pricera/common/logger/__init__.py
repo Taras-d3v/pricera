@@ -3,8 +3,6 @@ import logging.config
 import os
 import json
 
-logger = logging.getLogger("logger_init")
-
 
 def set_logger():
     current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -14,7 +12,9 @@ def set_logger():
         with open(config_path, "r", encoding="utf-8") as f:
             config = json.load(f)
         logging.config.dictConfig(config)
+        logger = logging.getLogger("logger_init")
         logger.info("Logger configuration loaded successfully")
     except FileNotFoundError:
+        logging.basicConfig(level=logging.INFO)
+        logger = logging.getLogger("logger_init")
         logger.error("Failed to load logging configuration, using basic logger instead")
-        logging.basicConfig(level=logging.DEBUG)
