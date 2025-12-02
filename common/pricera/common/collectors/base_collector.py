@@ -7,6 +7,9 @@ import io
 import gzip
 from botocore.exceptions import ClientError
 from pricera.models import URLWithHash
+import logging
+
+logger = logging.getLogger("base_collector")
 
 
 class ScrapyConfigurationMixin:
@@ -14,7 +17,13 @@ class ScrapyConfigurationMixin:
         self.spider_instance = None
 
     def process_scrapy_spider(
-        self, spider_cls, start_urls: list[URLWithHash], s3_bucket: str, s3_prefix: str, proxy_config=None, **kwargs
+        self,
+        spider_cls,
+        start_urls: list[URLWithHash],
+        storage_bucket: str,
+        storage_prefix: str,
+        proxy_config=None,
+        **kwargs,
     ):
         process = CrawlerProcess(get_project_settings())
         crawler = process.create_crawler(spider_cls)
@@ -28,8 +37,8 @@ class ScrapyConfigurationMixin:
             crawler,
             start_urls=start_urls,
             proxy_config=proxy_config,
-            s3_bucket=s3_bucket,
-            s3_prefix=s3_prefix,
+            storage_bucket=storage_bucket,
+            storage_prefix=storage_prefix,
             **kwargs,
         )
 
@@ -39,6 +48,11 @@ class ScrapyConfigurationMixin:
 
 
 class BaseCollector(ScrapyConfigurationMixin):
+    @staticmethod
+    def get_storage_file_name_from_url(url: str) -> str:
+        url_with_hash = URLWithHash.from_url(url)
+        return f"{url_with_hash.hash}.jsonl.gz"
+
     @classmethod
     def prepare_urls(cls, urls: list[str]) -> list[URLWithHash]:
         return URLWithHash.from_urls(urls)
@@ -74,6 +88,9 @@ class BaseCollector(ScrapyConfigurationMixin):
             s3 = boto3.client("s3")
             # Download file from S3
             response = s3.get_object(Bucket=bucket, Key=key)
+
+            logger.info("Successfully loaded file from S3", extra={"s3_bucket": bucket, "s3_key": key})
+
             file_content = response["Body"].read()
 
             # Auto-detect gzipped files by extension
@@ -89,10 +106,10 @@ class BaseCollector(ScrapyConfigurationMixin):
         except ClientError as exception:
             error_code = exception.response["Error"]["Code"]
             if error_code == "NoSuchKey":
-                # todo: replace with proper logging
-                print(f"File not found in S3: s3://{bucket}/{key}")
+                logger.error("File not found in S3", extra={"s3_bucket": bucket, "s3_key": key})
                 raise FileNotFoundError(f"File not found in S3: s3://{bucket}/{key}")
             else:
-                # todo: replace with proper logging
-                print(f"S3 error: {exception}")
+                logger.error(
+                    "Error during loading file from s3", exc_info=exception, extra={"s3_bucket": bucket, "s3_key": key}
+                )
                 raise IOError(f"S3 error loading file s3://{bucket}/{key}: {exception}")

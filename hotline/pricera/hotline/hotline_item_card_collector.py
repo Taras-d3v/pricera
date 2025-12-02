@@ -19,8 +19,8 @@ class HotlineItemCardCollector(BaseCollector):
 
         return self.process_scrapy_spider(
             spider_cls=HotlineItemCardSpider,
-            s3_bucket=self.bucket,
-            s3_prefix=self.path,
+            storage_bucket=self.bucket,
+            storage_prefix=self.path,
             start_urls=self.urls_with_hash,
             proxy_config=None,
         )

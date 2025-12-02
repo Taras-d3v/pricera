@@ -25,3 +25,7 @@ class URLWithHash(BaseModel):
     @classmethod
     def from_urls(cls, urls: list[str]) -> list["URLWithHash"]:
         return [cls(url=url) for url in urls]
+
+    @classmethod
+    def from_url(cls, url: str) -> "URLWithHash":
+        return cls(url=url)
