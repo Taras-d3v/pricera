@@ -37,6 +37,7 @@ def parse_line(line: str):
         url=raw_data["url"], text=raw_data["text"], status=raw_data["status"], object_key=raw_data["object_key"]
     )
 
+
 def ensure_list(obj) -> list:
     if isinstance(obj, list):
         return obj
