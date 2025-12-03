@@ -25,8 +25,9 @@ def prepare_message(
         payload_values = ensure_list(payload_values)
         # if parser/crawler can handle batch processing, yield the original message with all payload values
         if not collector_cls.is_synchronous:
-            original_message["payload"] = {payload_key: payload_values}
-            yield collector_cls, original_message
+            batch_message = deepcopy(original_message)
+            batch_message["payload"] = {payload_key: payload_values}
+            yield collector_cls, batch_message
         # else, yield individual messages for each payload value
         else:
             for payload_value in payload_values:
