@@ -2,6 +2,7 @@ from pricera.common.pipelines.collector_mapping import PAYLOAD_KEY_TO_PARSER
 from logging import getLogger
 from pricera.common import ensure_list
 from copy import deepcopy
+from pymongo import MongoClient
 
 logger = getLogger("parser_pipeline")
 
@@ -30,18 +31,21 @@ class ParserFactory:
         return parser_cls.get_parser(message=message)
 
 
-def parser_pipeline(message: dict, factory=ParserFactory) -> None:
+def parser_pipeline(mongo_client: MongoClient, message: dict, factory=ParserFactory) -> None:
     payload = message.get("payload")
     if not payload:
         logger.warning("Message payload is empty. Skipping parsing.")
         return
 
-    # todo: handle multiple keys in payload
-    payload_key, payload_value = list(payload.items())[0]
-    parser_cls = factory.get_parser_cls_from_payload_key(payload_key)
-    payload_value = ensure_list(payload_value)
-    for item in payload_value:
-        single_message = deepcopy(message)
-        single_message["payload"] = {payload_key: item}
-        parser_cls_obj = parser_cls.get_parser(message=single_message)
-        parser_cls_obj.parse()
+    for payload_key, payload_values in payload.items():
+        parser_cls = factory.get_parser_cls_from_payload_key(payload_key)
+        if not parser_cls:
+            logger.error("No parser found for payload key. Skipping.", extra={"payload_key": payload_key})
+            return
+
+        payload_values = ensure_list(payload_values)
+        for payload_value in payload_values:
+            single_message = deepcopy(message)
+            single_message["payload"] = {payload_key: payload_value}
+            parser_cls_obj = parser_cls.get_parser(message=single_message, mongo_client=mongo_client)
+            parser_cls_obj.parse()
