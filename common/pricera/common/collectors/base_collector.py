@@ -48,6 +48,8 @@ class ScrapyConfigurationMixin:
 
 
 class BaseCollector(ScrapyConfigurationMixin):
+    db_name: str = "pricera"
+
     @staticmethod
     def get_storage_file_name_from_url(url: str) -> str:
         url_with_hash = URLWithHash.from_url(url)
