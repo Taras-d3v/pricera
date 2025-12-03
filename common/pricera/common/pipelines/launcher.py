@@ -2,8 +2,11 @@ import argparse
 import logging
 from dataclasses import dataclass
 from typing import Callable
+
+from pymongo import MongoClient
+
 from pricera.common.logger import set_logger
-from pricera.common import FileBasedMessageConsumer, RabbitMQ
+from pricera.common import FileBasedMessageConsumer, RabbitMQ, get_mongo_client
 from pricera.common.pipelines import crawler_pipeline, parser_pipeline
 
 logger = logging.getLogger("launcher")
@@ -50,31 +53,33 @@ def validate_args(args: argparse.Namespace) -> None:
 @dataclass
 class MessageProcessor:
     pipeline: Callable
+    mongo_client: MongoClient
 
     def process(self, message: dict) -> None:
-        self.pipeline(message=message)
+        self.pipeline(message=message, mongo_client=self.mongo_client)
 
 
 def main() -> None:
     args = get_launcher_args()
 
     pipeline = PIPELINE_TO_FUNCTION[args.pipeline_type]
-    processor = MessageProcessor(pipeline=pipeline)
+    with get_mongo_client() as mongo_client:
+        processor = MessageProcessor(pipeline=pipeline, mongo_client=mongo_client)
 
-    if args.file:
-        logger.info(f"Starting file consumer for file: {args.file}")
-        consumer = FileBasedMessageConsumer(
-            function=processor.process,
-            file_path=args.file,
-        )
-        consumer.consume()
+        if args.file:
+            logger.info(f"Starting file consumer for file: {args.file}")
+            consumer = FileBasedMessageConsumer(
+                function=processor.process,
+                file_path=args.file,
+            )
+            consumer.consume()
 
-    else:
-        queue = PIPELINE_TO_QUEUE[args.pipeline_type]
-        logger.info(f"Starting RabbitMQ consumer on queue: {queue}")
+        else:
+            queue = PIPELINE_TO_QUEUE[args.pipeline_type]
+            logger.info(f"Starting RabbitMQ consumer on queue: {queue}")
 
-        consumer = RabbitMQ()
-        consumer.consume(function=processor.process, queue=queue)
+            consumer = RabbitMQ()
+            consumer.consume(function=processor.process, queue=queue)
 
 
 if __name__ == "__main__":
