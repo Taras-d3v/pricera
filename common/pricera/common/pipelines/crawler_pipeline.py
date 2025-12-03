@@ -1,4 +1,5 @@
 from pricera.common.pipelines.collector_mapping import PAYLOAD_KEY_TO_CRAWLER
+from pymongo import MongoClient
 
 
 class CrawlerFactory:
@@ -10,12 +11,12 @@ class CrawlerFactory:
         return message_key
 
     @classmethod
-    def get_crawler(cls, message: dict):
+    def get_crawler(cls, message: dict, **kwargs):
         message_key = cls.get_message_key_from_message(message)
         crawler_cls = PAYLOAD_KEY_TO_CRAWLER[message_key]
-        return crawler_cls.get_crawler(message=message)
+        return crawler_cls.get_crawler(message=message, **kwargs)
 
 
-def crawler_pipeline(message: dict, factory=CrawlerFactory) -> None:
-    collector = factory.get_crawler(message=message)
+def crawler_pipeline(mongo_client: MongoClient, message: dict, factory=CrawlerFactory) -> None:
+    collector = factory.get_crawler(message=message, mongo_client=mongo_client)
     collector.crawl()
