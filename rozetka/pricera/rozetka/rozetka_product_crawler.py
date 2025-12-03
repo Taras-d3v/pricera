@@ -3,6 +3,7 @@ from pricera.common.collectors import BaseCollector
 from pricera.models import URLWithHash
 from pricera.rozetka.rozetka_mixins import RozetkaProductMixin
 import logging
+from pymongo import MongoClient
 
 logger = logging.getLogger("rozetka_product_crawler")
 
@@ -10,6 +11,7 @@ logger = logging.getLogger("rozetka_product_crawler")
 @dataclass
 class RozetkaProductCrawler(BaseCollector, RozetkaProductMixin):
     urls: list[str]
+    mongo_client: MongoClient
 
     def __post_init__(self):
         super().__init__()
@@ -27,6 +29,6 @@ class RozetkaProductCrawler(BaseCollector, RozetkaProductMixin):
         )
 
     @classmethod
-    def get_crawler(cls, message: dict) -> "RozetkaProductCrawler":
+    def get_crawler(cls, message: dict, mongo_client: MongoClient, **kwargs) -> "RozetkaProductCrawler":
         payload = message["payload"]
-        return cls(urls=payload[cls.payload_key])
+        return cls(urls=payload[cls.payload_key], mongo_client=mongo_client)
