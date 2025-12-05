@@ -50,7 +50,7 @@ class RozetkaProductSpider(BaseSpider):
                 url=api_url,
                 callback=self.parse,
                 meta={
-                    "object_key": url.hash,
+                    "object_hash": url.hash,
                 },
             )
 

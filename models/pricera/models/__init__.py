@@ -10,7 +10,7 @@ class ResponseObject:
     url: str
     text: str
     status: int
-    object_key: str
+    object_hash: str
 
 
 class URLWithHash(BaseModel):

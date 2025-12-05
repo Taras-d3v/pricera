@@ -8,7 +8,7 @@ class ParsedLine(BaseModel):
     url: str
     text: str
     status: int
-    object_key: str
+    object_hash: str
 
     @property
     def raw_data(self):
@@ -34,7 +34,7 @@ def get_rabbitmq_password() -> Optional[str]:
 def parse_line(line: str):
     raw_data = json.loads(line)
     return ParsedLine(
-        url=raw_data["url"], text=raw_data["text"], status=raw_data["status"], object_key=raw_data["object_key"]
+        url=raw_data["url"], text=raw_data["text"], status=raw_data["status"], object_hash=raw_data["object_hash"]
     )
 
 

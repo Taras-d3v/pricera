@@ -20,7 +20,7 @@ class BaseSpider(Spider):
             url=response.url,
             text=response.text,
             status=response.status,
-            object_key=response.meta["object_key"],
+            object_hash=response.meta["object_hash"],
         )
 
     def start_requests(self):
@@ -31,6 +31,6 @@ class BaseSpider(Spider):
                     url=url.url,
                     callback=self.parse,
                     meta={
-                        "object_key": url.hash,
+                        "object_hash": url.hash,
                     },
                 )
