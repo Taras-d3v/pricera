@@ -48,9 +48,8 @@ class ScrapyConfigurationMixin:
 
 
 class BaseCollector(ScrapyConfigurationMixin):
-    db_name: str = "pricera"
-
     is_synchronous: bool = True
+    db_name: str = "pricera"
 
     @staticmethod
     def get_storage_file_name_from_url(url: str) -> str:
