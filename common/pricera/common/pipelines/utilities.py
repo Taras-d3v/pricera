@@ -8,9 +8,9 @@ logger = logging.getLogger("pipeline_utilities")
 
 
 def prepare_message(
-    collector_mapping: dict[str, type[BaseCollector]], original_message: dict
+    collector_mapping: dict[str, type[BaseCollector]], message: dict
 ) -> Iterator[Tuple[type[BaseCollector], dict]]:
-    payload = original_message.get("payload")
+    payload = message.get("payload")
     if not payload:
         logger.warning("Message payload is empty. Skipping pipeline processing")
         return
@@ -25,11 +25,11 @@ def prepare_message(
         # if parser/crawler can only handle single messages, yield each payload value separately
         if collector_cls.is_synchronous:
             for payload_value in payload_values:
-                single_message = deepcopy(original_message)
+                single_message = deepcopy(message)
                 single_message["payload"] = {payload_key: payload_value}
                 yield collector_cls, single_message
         # else, yield the entire batch
         else:
-            batch_message = deepcopy(original_message)
+            batch_message = deepcopy(message)
             batch_message["payload"] = {payload_key: payload_values}
             yield collector_cls, batch_message
