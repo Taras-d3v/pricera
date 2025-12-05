@@ -1,4 +1,4 @@
-from typing import Iterator, Tuple, Optional
+from typing import Iterator, Tuple
 import logging
 from copy import deepcopy
 from pricera.common import ensure_list
@@ -9,11 +9,10 @@ logger = logging.getLogger("pipeline_utilities")
 
 def prepare_message(
     collector_mapping: dict[str, BaseCollector], original_message: dict
-) -> Iterator[Optional[Tuple["BaseCollector", dict]]]:
+) -> Iterator[Tuple["BaseCollector", dict]]:
     payload = original_message.get("payload")
     if not payload:
         logger.warning("Message payload is empty. Skipping pipeline processing")
-        # todo: fixme
         return
 
     for payload_key, payload_values in payload.items():
@@ -23,14 +22,14 @@ def prepare_message(
             continue
 
         payload_values = ensure_list(payload_values)
-        # if parser/crawler can handle batch processing, yield the original message with all payload values
-        if not collector_cls.is_synchronous:
-            batch_message = deepcopy(original_message)
-            batch_message["payload"] = {payload_key: payload_values}
-            yield collector_cls, batch_message
-        # else, yield individual messages for each payload value
-        else:
+        # if parser/crawler can only handle single messages, yield each payload value separately
+        if collector_cls.is_synchronous:
             for payload_value in payload_values:
                 single_message = deepcopy(original_message)
                 single_message["payload"] = {payload_key: payload_value}
                 yield collector_cls, single_message
+        # else, yield the entire batch
+        else:
+            batch_message = deepcopy(original_message)
+            batch_message["payload"] = {payload_key: payload_values}
+            yield collector_cls, batch_message
