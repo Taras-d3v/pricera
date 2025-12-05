@@ -11,5 +11,6 @@ def crawler_pipeline(mongo_client: MongoClient, message: dict, trigger_to_cls_ma
         if not item:
             continue
         crawler_cls, prepared_message = item
-        crawler_cls_obj = crawler_cls.get_crawler(message=prepared_message, mongo_client=mongo_client)
-        crawler_cls_obj.crawl()
+        collector_cls_obj = crawler_cls.get_crawler(message=prepared_message, mongo_client=mongo_client)
+        spider_cls_obj = collector_cls_obj.crawl()
+        collector_cls_obj.update_crawl_status(spider_cls_obj)
