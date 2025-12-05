@@ -3,7 +3,6 @@ from pricera.common.collectors import BaseCollector
 import logging
 from pricera.rozetka.rozetka_mixins import RozetkaProductMixin
 from pymongo import MongoClient
-from typing import ClassVar
 
 logger = logging.getLogger("rozetka_product_parser")
 
@@ -12,7 +11,6 @@ logger = logging.getLogger("rozetka_product_parser")
 class RozetkaProductParser(BaseCollector, RozetkaProductMixin):
     url: str
     mongo_client: MongoClient
-    collection_name: ClassVar[str] = "rozetka_product"
 
     def __post_init__(self):
         super().__init__()
