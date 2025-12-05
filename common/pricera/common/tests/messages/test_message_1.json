@@ -1,8 +1,8 @@
 {
-  "payload":{
-    "foo": [
-    "bar_1",
-    "bar_2"
-  ]
-  }
+   "payload":{
+      "foo":[
+         "bar_1",
+         "bar_2"
+      ]
+   }
 }
