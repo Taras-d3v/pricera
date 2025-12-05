@@ -8,8 +8,8 @@ logger = logging.getLogger("pipeline_utilities")
 
 
 def prepare_message(
-    collector_mapping: dict[str, BaseCollector], original_message: dict
-) -> Iterator[Tuple["BaseCollector", dict]]:
+    collector_mapping: dict[str, type[BaseCollector]], original_message: dict
+) -> Iterator[Tuple[type[BaseCollector], dict]]:
     payload = original_message.get("payload")
     if not payload:
         logger.warning("Message payload is empty. Skipping pipeline processing")
