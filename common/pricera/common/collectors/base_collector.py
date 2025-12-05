@@ -50,6 +50,8 @@ class ScrapyConfigurationMixin:
 class BaseCollector(ScrapyConfigurationMixin):
     db_name: str = "pricera"
 
+    is_synchronous: bool = True
+
     @staticmethod
     def get_storage_file_name_from_url(url: str) -> str:
         url_with_hash = URLWithHash.from_url(url)
@@ -60,14 +62,18 @@ class BaseCollector(ScrapyConfigurationMixin):
         return URLWithHash.from_urls(urls)
 
     def crawl(self):
-        raise NotImplemented
+        raise NotImplementedError
 
     def parse(self, *args, **kwargs) -> dict:
-        raise NotImplemented
+        raise NotImplementedError
 
     @classmethod
-    def get_collector(cls, *args, **kwargs) -> "BaseCollector":
-        raise NotImplemented
+    def get_parser(cls, *args, **kwargs) -> "BaseCollector":
+        raise NotImplementedError
+
+    @classmethod
+    def get_crawler(cls, *args, **kwargs) -> "BaseCollector":
+        raise NotImplementedError
 
     @staticmethod
     def load_file_from_s3(

@@ -22,6 +22,7 @@ class TestFileBasedMessageConsumer(unittest.TestCase):
         test_file_path = os.path.join(self.messages_folder, "test_message_1.json")
         consumer = FileBasedMessageConsumer(file_path=test_file_path, function=lambda x: x)
 
+        # todo: add multi-line support
         messages = list(consumer._read_json_file())
 
         expected_messages = [{"payload": {"foo": ["bar_1", "bar_2"]}}]
