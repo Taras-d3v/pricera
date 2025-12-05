@@ -30,16 +30,14 @@ class RozetkaProductParser(BaseCollector, RozetkaProductMixin):
         )
 
         try:
-            res = RozetkaProductParser.parse(file)
-            self.db_collection.update_one(filter=self.db_filter, update={"$set": res}, upsert=True)
+            parsed_data = RozetkaProductParser.parse(file)
+            parsed_status = {f"pricera.{self.collector_name}.parse_status": "success"}
             logger.info("Successfully parsed rozetka product")
         except Exception as e:
-            self.db_collection.update_one(
-                filter=self.db_filter,
-                update={"$set": {"parse_status": "error"}},
-                upsert=True,
-            )
+            parsed_data, parsed_status = {}, {f"pricera.{self.collector_name}.parse_status": "failure"}
             logger.error("Error during rozetka product parsing", exc_info=e)
+
+        self.db_collection.update_one(filter=self.db_filter, update={"$set": parsed_data | parsed_status}, upsert=True)
 
     @classmethod
     def get_parser(cls, message: dict, mongo_client: MongoClient) -> "RozetkaProductParser":
