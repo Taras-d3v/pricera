@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from pricera.common.collectors import BaseCollector
-from pricera.models import URLWithHash
+from pricera.models import HashedURL
 from pricera.rozetka.rozetka_mixins import RozetkaProductMixin
 import logging
 from pymongo import MongoClient, UpdateOne
@@ -16,7 +16,7 @@ class RozetkaProductCrawler(BaseCollector, RozetkaProductMixin):
 
     def __post_init__(self):
         super().__init__()
-        self.urls_with_hash: list[URLWithHash] = self.prepare_urls(self.urls)
+        self.urls_with_hash: list[HashedURL] = self.prepare_urls(self.urls)
         self.db_collection = self.mongo_client[self.db_name][self.collection_name]
 
     def crawl(self):

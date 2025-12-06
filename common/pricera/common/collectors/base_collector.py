@@ -6,7 +6,7 @@ import boto3
 import io
 import gzip
 from botocore.exceptions import ClientError
-from pricera.models import URLWithHash
+from pricera.models import HashedURL
 import logging
 from twisted.python.failure import Failure
 
@@ -20,7 +20,7 @@ class ScrapyConfigurationMixin:
     def process_scrapy_spider(
         self,
         spider_cls,
-        start_urls: list[URLWithHash],
+        start_urls: list[HashedURL],
         storage_bucket: str,
         storage_prefix: str,
         proxy_config=None,
@@ -67,12 +67,12 @@ class BaseCollector(ScrapyConfigurationMixin):
 
     @staticmethod
     def get_storage_file_name_from_url(url: str) -> str:
-        url_with_hash = URLWithHash.from_url(url)
+        url_with_hash = HashedURL.from_value(url)
         return f"{url_with_hash.hash}.jsonl.gz"
 
     @classmethod
-    def prepare_urls(cls, urls: list[str]) -> list[URLWithHash]:
-        return URLWithHash.from_urls(urls)
+    def prepare_urls(cls, urls: list[str]) -> list[HashedURL]:
+        return HashedURL.from_values(urls)
 
     def crawl(self):
         raise NotImplementedError

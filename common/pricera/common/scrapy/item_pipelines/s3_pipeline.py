@@ -62,11 +62,7 @@ class S3Pipeline:
         return pipeline
 
     def process_item(self, item: ResponseObject, spider):
-        object_hash = item.object_hash
-
-        self.responses[object_hash].append(
-            {"url": item.url, "text": item.text, "status": item.status, "object_hash": item.object_hash}
-        )
+        self.responses[item.object_hash].append(item.model_dump())
         return item
 
     def spider_closed(self, spider, reason):

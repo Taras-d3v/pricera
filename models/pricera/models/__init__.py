@@ -1,31 +1,34 @@
-__all__ = ["ResponseObject", "URLWithHash"]
+__all__ = ["ResponseObject", "HashedURL"]
 
-from dataclasses import dataclass
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 import hashlib
 
 
-@dataclass
-class ResponseObject:
+class ResponseObject(BaseModel):
     url: str
     text: str
     status: int
     object_hash: str
 
+    model_config = ConfigDict(extra="allow")
 
-class URLWithHash(BaseModel):
-    url: str
-    hash: str = Field(default=None)
 
-    def __init__(self, **data):
-        if "hash" not in data or data["hash"] is None:
-            data["hash"] = hashlib.sha256(data["url"].encode()).hexdigest()
-        super().__init__(**data)
+class HashedURL(str):
+    hash: str
+
+    def __new__(cls, value: str):
+        obj = super().__new__(cls, value)
+        obj.hash = cls.get_hash(value)
+        return obj
+
+    @staticmethod
+    def get_hash(value: str) -> str:
+        return hashlib.sha256(value.encode()).hexdigest()
 
     @classmethod
-    def from_urls(cls, urls: list[str]) -> list["URLWithHash"]:
-        return [cls(url=url) for url in urls]
+    def from_value(cls, value: str) -> "HashedURL":
+        return cls(value)
 
     @classmethod
-    def from_url(cls, url: str) -> "URLWithHash":
-        return cls(url=url)
+    def from_values(cls, values: list[str]) -> list["HashedURL"]:
+        return [cls(url) for url in values]
