@@ -22,13 +22,13 @@ class HashedURL(str):
         return obj
 
     @staticmethod
-    def get_hash(url: str) -> str:
-        return hashlib.sha256(url.encode()).hexdigest()
+    def get_hash(value: str) -> str:
+        return hashlib.sha256(value.encode()).hexdigest()
 
     @classmethod
-    def from_url(cls, url: str) -> "HashedURL":
-        return cls(url)
+    def from_value(cls, value: str) -> "HashedURL":
+        return cls(value)
 
     @classmethod
-    def from_urls(cls, urls: list[str]) -> list["HashedURL"]:
-        return [cls(url) for url in urls]
+    def from_values(cls, values: list[str]) -> list["HashedURL"]:
+        return [cls(url) for url in values]
