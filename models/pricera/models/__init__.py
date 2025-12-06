@@ -1,16 +1,16 @@
 __all__ = ["ResponseObject", "HashedURL"]
 
-from dataclasses import dataclass
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 import hashlib
 
 
-@dataclass
-class ResponseObject:
+class ResponseObject(BaseModel):
     url: str
     text: str
     status: int
     object_key: str
+
+    model_config = ConfigDict(extra="allow")
 
 
 class HashedURL(str):
