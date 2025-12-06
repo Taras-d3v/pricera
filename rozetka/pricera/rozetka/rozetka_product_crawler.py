@@ -44,6 +44,9 @@ class RozetkaProductCrawler(BaseCollector, RozetkaProductMixin):
             url = hash_to_url[url_hash]
             # Minimal payload normalization
             crawl_status = {f"pricera.{self.collector_name}.crawl_status": status}
+            object_key = {
+                f"object_key.{self.collector_name}": f"{self.storage_bucket}/{self.storage_prefix}/{url_hash}.jsonl.gz"
+            }
 
             # Compose the update operation. We assume there's a collection named according to storage_prefix
             # or a default collection accessible via mixin/collector. If storage_prefix is not a collection name,
@@ -51,7 +54,7 @@ class RozetkaProductCrawler(BaseCollector, RozetkaProductMixin):
             bulk_requests.append(
                 UpdateOne(
                     filter={"product_url": url},
-                    update={"$set": crawl_status},
+                    update={"$set": crawl_status | object_key},
                     upsert=True,
                 )
             )
