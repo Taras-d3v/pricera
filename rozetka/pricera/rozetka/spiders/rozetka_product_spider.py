@@ -4,7 +4,7 @@ from scrapy.http import Response, Request
 
 from pricera.common.scrapy import BaseSpider
 from pricera.models import ResponseObject
-from pricera.models import URLWithHash
+from pricera.models import HashedURL
 from pricera.rozetka.parsers import RozetkaProductParser
 
 
@@ -37,13 +37,13 @@ class RozetkaProductSpider(BaseSpider):
         },
     }
 
-    def __init__(self, start_urls: list[URLWithHash], *args, **kwargs):
+    def __init__(self, start_urls: list[HashedURL], *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.start_urls = start_urls
 
     def start_requests(self):
         for url in self.start_urls:
-            product_id = RozetkaProductParser.get_product_id_from_url(url.url)
+            product_id = RozetkaProductParser.get_product_id_from_url(url)
             api_url = f"https://common-api.rozetka.com.ua/v1/api/product/details?country=UA&lang=ua&ids={product_id}"
 
             yield Request(
