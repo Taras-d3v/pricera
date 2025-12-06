@@ -1,4 +1,4 @@
-__all__ = ["ResponseObject", "URLWithHash"]
+__all__ = ["ResponseObject", "HashedURL"]
 
 from dataclasses import dataclass
 from pydantic import BaseModel, Field
@@ -13,19 +13,22 @@ class ResponseObject:
     object_key: str
 
 
-class URLWithHash(BaseModel):
-    url: str
-    hash: str = Field(default=None)
+class HashedURL(str):
+    hash: str
 
-    def __init__(self, **data):
-        if "hash" not in data or data["hash"] is None:
-            data["hash"] = hashlib.sha256(data["url"].encode()).hexdigest()
-        super().__init__(**data)
+    def __new__(cls, value: str):
+        obj = super().__new__(cls, value)
+        obj.hash = cls.get_hash(value)
+        return obj
+
+    @staticmethod
+    def get_hash(url: str) -> str:
+        return hashlib.sha256(url.encode()).hexdigest()
 
     @classmethod
-    def from_urls(cls, urls: list[str]) -> list["URLWithHash"]:
-        return [cls(url=url) for url in urls]
+    def from_url(cls, url: str) -> "HashedURL":
+        return cls(url)
 
     @classmethod
-    def from_url(cls, url: str) -> "URLWithHash":
-        return cls(url=url)
+    def from_urls(cls, urls: list[str]) -> list["HashedURL"]:
+        return [cls(url) for url in urls]
