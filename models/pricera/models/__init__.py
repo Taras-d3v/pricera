@@ -8,7 +8,7 @@ class ResponseObject(BaseModel):
     url: str
     text: str
     status: int
-    object_key: str
+    object_hash: str
 
     model_config = ConfigDict(extra="allow")
 

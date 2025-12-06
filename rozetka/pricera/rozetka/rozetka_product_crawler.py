@@ -3,6 +3,7 @@ from pricera.common.collectors import BaseCollector
 from pricera.models import HashedURL
 from pricera.rozetka.rozetka_mixins import RozetkaProductMixin
 import logging
+from pymongo import MongoClient, UpdateOne
 
 logger = logging.getLogger("rozetka_product_crawler")
 
@@ -10,10 +11,13 @@ logger = logging.getLogger("rozetka_product_crawler")
 @dataclass
 class RozetkaProductCrawler(BaseCollector, RozetkaProductMixin):
     urls: list[str]
+    mongo_client: MongoClient
+    is_synchronous: bool = False
 
     def __post_init__(self):
         super().__init__()
         self.urls_with_hash: list[HashedURL] = self.prepare_urls(self.urls)
+        self.db_collection = self.mongo_client[self.db_name][self.collection_name]
 
     def crawl(self):
         from pricera.rozetka.spiders.rozetka_product_spider import RozetkaProductSpider
@@ -26,7 +30,39 @@ class RozetkaProductCrawler(BaseCollector, RozetkaProductMixin):
             proxy_config=None,
         )
 
+    def update_crawl_status(self, spider):
+        statuses = spider.crawler.stats.get_value("custom_status")
+        if not statuses:
+            return
+
+        hash_to_url = {url_with_hash.hash: url_with_hash for url_with_hash in self.urls_with_hash}
+
+        bulk_requests: list[UpdateOne] = []
+        for url_hash, status in statuses.items():
+            url = hash_to_url[url_hash]
+            crawl_status = {f"pricera.{self.collector_name}.crawl_status": status}
+            object_key = {
+                f"object_key.{self.collector_name}": f"{self.storage_bucket}/{self.storage_prefix}/{url_hash}.jsonl.gz"
+            }
+
+            bulk_requests.append(
+                UpdateOne(
+                    filter={"product_url": url},
+                    update={"$set": crawl_status | object_key},
+                    upsert=True,
+                )
+            )
+
+        if not bulk_requests:
+            return
+
+        try:
+            self.db_collection.bulk_write(bulk_requests, ordered=False)
+            logger.info("Finished updating crawl statuses")
+        except Exception as e:
+            logger.error("Failed during the bulk updating crawl statuses", exc_info=e)
+
     @classmethod
-    def get_crawler(cls, message: dict) -> "RozetkaProductCrawler":
+    def get_crawler(cls, message: dict, mongo_client: MongoClient, **kwargs) -> "RozetkaProductCrawler":
         payload = message["payload"]
-        return cls(urls=payload[cls.payload_key])
+        return cls(urls=payload[cls.payload_key], mongo_client=mongo_client)

@@ -15,9 +15,9 @@ class S3Pipeline:
     MAX_UPLOAD_WORKERS = 10
     MAX_RETRY_ATTEMPTS = 2
     """
-    Pipeline collects incoming items by `object_key` and, when the spider closes,
+    Pipeline collects incoming items by `object_hash` and, when the spider closes,
     uploads each request chain to a separate file in S3 in JSON Lines format.
-    Each item is expected to contain the `object_key` field.
+    Each item is expected to contain the `object_hash` field.
     Scrapy settings expected:
       - S3_BUCKET_NAME
       - S3_PREFIX
@@ -62,7 +62,7 @@ class S3Pipeline:
         return pipeline
 
     def process_item(self, item: ResponseObject, spider):
-        self.responses[item.object_key].append(item.model_dump())
+        self.responses[item.object_hash].append(item.model_dump())
         return item
 
     def spider_closed(self, spider, reason):
@@ -74,6 +74,7 @@ class S3Pipeline:
             return
 
         try:
+            self.collect_response_statuses(spider=spider, responses=self.responses)
             success_count, failure_count = self._upload_all_chains_parallel()
             self._log_upload_summary(success_count, failure_count)
         except Exception as e:
@@ -81,6 +82,25 @@ class S3Pipeline:
         finally:
             # Always clear responses to prevent memory leaks
             self.responses.clear()
+
+    @staticmethod
+    def get_response_status(response_item: list[dict]) -> str:
+        if not response_item:
+            return "failure"
+
+        for item in response_item:
+            if item["status"] != 200:
+                return "failure"
+
+        return "success"
+
+    def collect_response_statuses(self, spider, responses: dict) -> None:
+        for object_hash, items in responses.items():
+            response_status = self.get_response_status(items)
+
+            statuses = spider.crawler.stats.get_value("custom_status", {})
+            statuses[object_hash] = response_status
+            spider.crawler.stats.set_value("custom_status", statuses)
 
     def _upload_all_chains_parallel(self) -> tuple[int, int]:
         """
@@ -95,59 +115,59 @@ class S3Pipeline:
         with ThreadPoolExecutor(max_workers=self.MAX_UPLOAD_WORKERS, thread_name_prefix="s3_upload") as executor:
             # Submit all upload tasks
             future_to_key = {
-                executor.submit(self._upload_single_chain, object_key, items): object_key
-                for object_key, items in self.responses.items()
+                executor.submit(self._upload_single_chain, object_hash, items): object_hash
+                for object_hash, items in self.responses.items()
             }
 
             # Process results as they complete
             for future in as_completed(future_to_key):
-                object_key = future_to_key[future]
+                object_hash = future_to_key[future]
                 try:
                     future.result()
                     success_count += 1
                 except Exception as e:
                     failure_count += 1
-                    self.logger.error("Chain %s failed to upload: %s", object_key, e)
+                    self.logger.error("Chain %s failed to upload: %s", object_hash, e)
 
         return success_count, failure_count
 
-    def _upload_single_chain(self, object_key: str, items: List[Dict[str, Any]]) -> None:
+    def _upload_single_chain(self, object_hash: str, items: List[Dict[str, Any]]) -> None:
         """
         Upload a single chain to S3 with retry logic.
 
         Args:
-            object_key: Unique identifier for the chain
+            object_hash: Unique identifier for the chain
             items: List of items to upload
 
         Raises:
             Exception: If upload fails after all retry attempts
         """
-        s3_key = f"{self.prefix.rstrip('/')}/{object_key}.jsonl.gz"
+        s3_key = f"{self.prefix.rstrip('/')}/{object_hash}.jsonl.gz"
 
         for attempt in range(self.MAX_RETRY_ATTEMPTS + 1):
             try:
-                bio = self._create_gzipped_stream(items, object_key)
-                self._upload_to_s3(bio, s3_key, object_key)
+                bio = self._create_gzipped_stream(items, object_hash)
+                self._upload_to_s3(bio, s3_key, object_hash)
                 return  # Success - exit method
 
             except Exception as e:
                 if attempt == self.MAX_RETRY_ATTEMPTS:
                     self.logger.error(
-                        "Final upload failure for chain %s after %d attempts: %s", object_key, attempt + 1, e
+                        "Final upload failure for chain %s after %d attempts: %s", object_hash, attempt + 1, e
                     )
                     raise  # Re-raise after final attempt
                 else:
                     self.logger.warning(
-                        "Upload attempt %d failed for chain %s, retrying: %s", attempt + 1, object_key, e
+                        "Upload attempt %d failed for chain %s, retrying: %s", attempt + 1, object_hash, e
                     )
 
-    def _create_gzipped_stream(self, items: List[Dict[str, Any]], object_key: str) -> io.BytesIO:
+    def _create_gzipped_stream(self, items: List[Dict[str, Any]], object_hash: str) -> io.BytesIO:
         """
         Create gzipped JSON Lines stream from items.
 
         Args:
             items: List of dictionaries to compress
-            object_key: Identifier for filename
+            object_hash: Identifier for filename
 
         Returns:
             io.BytesIO: Buffer containing gzipped data
@@ -155,7 +175,7 @@ class S3Pipeline:
         bio = io.BytesIO()
 
         try:
-            with gzip.GzipFile(fileobj=bio, mode="wb", filename=f"{object_key}.jsonl") as gz:
+            with gzip.GzipFile(fileobj=bio, mode="wb", filename=f"{object_hash}.jsonl") as gz:
                 for item in items:
                     line = json.dumps(item, default=str, ensure_ascii=False) + "\n"
                     gz.write(line.encode("utf-8"))
@@ -165,16 +185,16 @@ class S3Pipeline:
 
         except Exception as e:
             bio.close()  # Clean up on error
-            raise Exception(f"Failed to create gzip stream for {object_key}: {e}")
+            raise Exception(f"Failed to create gzip stream for {object_hash}: {e}")
 
-    def _upload_to_s3(self, bio: io.BytesIO, s3_key: str, object_key: str) -> None:
+    def _upload_to_s3(self, bio: io.BytesIO, s3_key: str, object_hash: str) -> None:
         """
         Upload bytes buffer to S3.
 
         Args:
             bio: BytesIO buffer containing data to upload
             s3_key: Full S3 key path
-            object_key: Original object identifier for logging
+            object_hash: Original object identifier for logging
 
         Raises:
             Exception: If S3 upload fails
@@ -183,7 +203,7 @@ class S3Pipeline:
 
         try:
             self.s3.upload_fileobj(bio, self.bucket, s3_key, ExtraArgs=extra_args)
-            self.logger.debug("Successfully uploaded chain %s to s3://%s/%s", object_key, self.bucket, s3_key)
+            self.logger.debug("Successfully uploaded chain %s to s3://%s/%s", object_hash, self.bucket, s3_key)
         finally:
             # Always close the buffer to free memory
             bio.close()

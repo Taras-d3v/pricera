@@ -1,4 +1,4 @@
-from typing import Union, List
+from typing import Union, List, ClassVar
 from scrapy import signals
 from scrapy.crawler import CrawlerProcess
 from scrapy.utils.project import get_project_settings
@@ -8,6 +8,7 @@ import gzip
 from botocore.exceptions import ClientError
 from pricera.models import HashedURL
 import logging
+from twisted.python.failure import Failure
 
 logger = logging.getLogger("base_collector")
 
@@ -31,24 +32,38 @@ class ScrapyConfigurationMixin:
         def handle_spider_opened(spider):
             self.spider_instance = spider
 
+        def handle_spider_error(failure: Failure, response, spider):
+            self.spider_error = failure.value
+            logger.error(
+                "Spider error occurred",
+                extra={"exception": repr(self.spider_error), "url": getattr(response, "url", None)},
+            )
+
         crawler.signals.connect(handle_spider_opened, signal=signals.spider_opened)
+        crawler.signals.connect(handle_spider_error, signal=signals.spider_error)
 
-        process.crawl(
-            crawler,
-            start_urls=start_urls,
-            proxy_config=proxy_config,
-            storage_bucket=storage_bucket,
-            storage_prefix=storage_prefix,
-            **kwargs,
-        )
+        try:
+            process.crawl(
+                crawler,
+                start_urls=start_urls,
+                proxy_config=proxy_config,
+                storage_bucket=storage_bucket,
+                storage_prefix=storage_prefix,
+                **kwargs,
+            )
 
-        process.start()
+            process.start()
+        except Exception as e:
+            logger.exception("Scrapy failed to start")
+            self.spider_error = e
 
         return self.spider_instance
 
 
 class BaseCollector(ScrapyConfigurationMixin):
-    is_synchronous: bool = True
+    storage_bucket: ClassVar[str] = "pricera-crawled-data"
+    is_synchronous: ClassVar[bool] = True
+    db_name: ClassVar[str] = "pricera"
 
     @staticmethod
     def get_storage_file_name_from_url(url: str) -> str:
@@ -60,6 +75,9 @@ class BaseCollector(ScrapyConfigurationMixin):
         return HashedURL.from_values(urls)
 
     def crawl(self):
+        raise NotImplementedError
+
+    def update_crawl_status(self, *args, **kwargs):
         raise NotImplementedError
 
     def parse(self, *args, **kwargs) -> dict:

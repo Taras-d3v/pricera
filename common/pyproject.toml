@@ -19,6 +19,7 @@ pytest = "^9.0.1"
 scrapy-impersonate = "^1.6.1"
 botocore = "^1.41.2"
 colorlog = "^6.10.1"
+pymongo = "^4.15.5"
 
 [build-system]
 requires = ["poetry>=1.0.0"]
