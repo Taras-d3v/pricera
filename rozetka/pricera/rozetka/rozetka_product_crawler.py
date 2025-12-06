@@ -37,7 +37,7 @@ class RozetkaProductCrawler(BaseCollector, RozetkaProductMixin):
         if not statuses:
             return
 
-        hash_to_url = {url_with_hash.hash: url_with_hash.url for url_with_hash in self.urls_with_hash}
+        hash_to_url = {url_with_hash.hash: url_with_hash for url_with_hash in self.urls_with_hash}
 
         bulk_requests: list[UpdateOne] = []
         for url_hash, status in statuses.items():
