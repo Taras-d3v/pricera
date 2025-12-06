@@ -31,8 +31,6 @@ class RozetkaProductCrawler(BaseCollector, RozetkaProductMixin):
         )
 
     def update_crawl_status(self, spider):
-        # Expecting spider to accumulate crawl statuses in stats under key 'custom_status'
-        # statuses structure: {url_hash: {"status": str, "reason": str|None, ...}}
         statuses = spider.crawler.stats.get_value("custom_status")
         if not statuses:
             return
@@ -42,15 +40,11 @@ class RozetkaProductCrawler(BaseCollector, RozetkaProductMixin):
         bulk_requests: list[UpdateOne] = []
         for url_hash, status in statuses.items():
             url = hash_to_url[url_hash]
-            # Minimal payload normalization
             crawl_status = {f"pricera.{self.collector_name}.crawl_status": status}
             object_key = {
                 f"object_key.{self.collector_name}": f"{self.storage_bucket}/{self.storage_prefix}/{url_hash}.jsonl.gz"
             }
 
-            # Compose the update operation. We assume there's a collection named according to storage_prefix
-            # or a default collection accessible via mixin/collector. If storage_prefix is not a collection name,
-            # replace with the appropriate collection.
             bulk_requests.append(
                 UpdateOne(
                     filter={"product_url": url},
