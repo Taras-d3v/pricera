@@ -17,6 +17,7 @@ class RozetkaProductParser(BaseCollector, RozetkaProductMixin):
         self.storage_file_name = self.get_storage_file_name_from_url(self.url)
         self.db_collection = self.mongo_client[self.db_name][self.collection_name]
         self.db_filter = {"product_url": self.url}
+        self.object_key = f"{self.storage_bucket}/{self.storage_prefix}/{self.storage_file_name}"
 
     def parse(self):
         from pricera.rozetka.parsers.rozetka_product_parser import RozetkaProductParser
